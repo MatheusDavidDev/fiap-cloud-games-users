@@ -1,0 +1,1 @@
+﻿01 - Add-Migration Init -context FcgUsersDbContext -output Data/Migrations

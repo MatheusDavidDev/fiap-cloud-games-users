@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="9.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FCG.Users.Domain\FCG.Users.Domain.csproj" />
+    <ProjectReference Include="..\FCG.Users.Core\FCG.Users.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\fiap-cloud-games-contracts\FCG.Contracts\FCG.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
