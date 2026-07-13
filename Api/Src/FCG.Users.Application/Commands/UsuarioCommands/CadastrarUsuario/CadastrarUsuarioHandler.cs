@@ -1,4 +1,5 @@
-﻿using FCG.Users.Application.Interfaces.Security;
+﻿using FCG.Contracts;
+using FCG.Users.Application.Interfaces.Security;
 using FCG.Users.Core.UnitOfWork;
 using FCG.Users.Domain.Entities;
 using MassTransit;
@@ -42,7 +43,7 @@ public class CadastrarUsuarioHandler : IRequestHandler<CadastrarUsuarioCommand>
 
         await _unitOfWork.SaveChanges();
 
-        //await _publishEndpoint.Publish(
-        //    new UsuarioCreatedEvent(usuario.Id,usuario.Nome,usuario.Email,DateTime.UtcNow), cancellationToken);
+        await _publishEndpoint.Publish(
+            new UserCreatedEvent(usuario.Id,usuario.Nome,usuario.Email,DateTime.UtcNow), cancellationToken);
     }
 }

@@ -1,0 +1,6 @@
+[submodule "Api/libs/FCG.Contracts"]
+	path = Api/libs/FCG.Contracts
+	url = https://github.com/MatheusDavidDev/fiap-cloud-games-contracts.git
+[submodule "Api/libs"]
+	path = Api/libs
+	url = https://github.com/MatheusDavidDev/fiap-cloud-games-contracts.git

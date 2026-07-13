@@ -5,10 +5,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\libs\FCG.Contracts\FCG.Contracts.csproj" />
     <ProjectReference Include="..\FCG.Users.Domain\FCG.Users.Domain.csproj" />
     <ProjectReference Include="..\FCG.Users.Core\FCG.Users.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\fiap-cloud-games-contracts\FCG.Contracts\FCG.Contracts.csproj" />
+	<ProjectReference Include="..\..\libs\FCG.Contracts\FCG.Contracts\FCG.Contracts.csproj" />
   </ItemGroup>
+
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
