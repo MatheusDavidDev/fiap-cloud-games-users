@@ -1,4 +1,6 @@
-﻿namespace FCG.Users.Api.Middleware;
+﻿using System.Diagnostics;
+
+namespace FCG.Users.Api.Middleware;
 
 public class RequestLoggingMiddleware
 {
@@ -13,11 +15,13 @@ public class RequestLoggingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var method = context.Request.Method;
-        var path = context.Request.Path;
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
 
-        _logger.LogInformation("HTTP Iniciando: {Method} {Path}", method, path);
+        if (!context.Request.Headers.TryGetValue("X-Correlation-Id", out var correlationId))
+        {
+            correlationId = Guid.NewGuid().ToString();
+        }
+        context.Response.Headers.Append("X-Correlation-Id", correlationId);
 
         try
         {
@@ -26,11 +30,31 @@ public class RequestLoggingMiddleware
         finally
         {
             stopwatch.Stop();
-            var statusCode = context.Response.StatusCode;
 
-            _logger.LogInformation(
-                "HTTP Finalizado: {Method} {Path} respondeu {StatusCode} em {ElapsedMilliseconds}ms",
-                method, path, statusCode, stopwatch.ElapsedMilliseconds);
+            var httpMetadata = new
+            {
+                method = context.Request.Method,
+                url = context.Request.Path + context.Request.QueryString,
+                status_code = context.Response.StatusCode,
+                latency_ms = stopwatch.Elapsed.TotalMilliseconds,
+                client_ip = context.Connection.RemoteIpAddress?.ToString()
+            };
+
+            var message = $"HTTP {httpMetadata.method} {httpMetadata.url} finalizado com status {httpMetadata.status_code} em {httpMetadata.latency_ms:F2}ms";
+
+            if (context.Response.StatusCode >= 500)
+            {
+                _logger.LogError("{@Http} | CorrelationId: {CorrelationId} | Message: {Message}", httpMetadata, correlationId.ToString(), message);
+            }
+            else if (context.Response.StatusCode >= 400)
+            {
+                _logger.LogWarning("{@Http} | CorrelationId: {CorrelationId} | Message: {Message}", httpMetadata, correlationId.ToString(), message);
+            }
+            else
+            {
+                _logger.LogInformation("{@Http} | CorrelationId: {CorrelationId} | Message: {Message}", httpMetadata, correlationId.ToString(), message);
+            }
         }
     }
 }
+

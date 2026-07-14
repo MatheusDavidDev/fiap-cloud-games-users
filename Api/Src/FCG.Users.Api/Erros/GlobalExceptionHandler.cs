@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
-using System.Net;
 
 namespace FCG.Users.Api.Erros;
 
@@ -12,19 +11,56 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         context.Response.ContentType = "application/json";
 
-        context.Response.StatusCode = exception switch
+        ApiException response;
+
+        switch (exception)
         {
-            UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized, // 401
-            _ => (int)HttpStatusCode.InternalServerError                    // 500
-        };
+            case FluentValidation.ValidationException validationException:
 
-        // Usa a sua classe padrão ApiException que você já tinha criado
-        var response = new ApiException(context.Response.StatusCode.ToString(), exception.Message);
+                context.Response.StatusCode = 400;
 
-        // Devolve o JSON limpo para o usuário da API
-        await context.Response.WriteAsJsonAsync(response, cancellationToken);
+                response = new ApiException
+                {
+                    StatusCode = 400,
+                    Message = "Erro de validação.",
+                    Detail = string.Join(
+                        ", ",
+                        validationException.Errors
+                            .Select(x => x.ErrorMessage))
+                };
 
-        return true; // Informa ao .NET que o erro já foi tratado
+                break;
+
+            case UnauthorizedAccessException:
+
+                context.Response.StatusCode = 401;
+
+                response = new ApiException
+                {
+                    StatusCode = 401,
+                    Message = "Não autorizado."
+                };
+
+                break;
+
+            default:
+
+                context.Response.StatusCode = 500;
+
+                response = new ApiException
+                {
+                    StatusCode = 500,
+                    Message = exception.Message,
+                    Detail = exception.InnerException?.Message
+                };
+
+                break;
+        }
+
+        await context.Response.WriteAsJsonAsync(
+            response,
+            cancellationToken);
+
+        return true;
     }
 }
-

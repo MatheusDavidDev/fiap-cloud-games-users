@@ -13,8 +13,13 @@ using FCG.Users.Infra.Security;
 using FluentValidation;
 using MassTransit;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,34 +27,82 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-
-
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;   
+})
+.AddJwtBearer(options => 
+{
+
+    var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException();
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtKey)),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        var esquemaSeguranca = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = JwtBearerDefaults.AuthenticationScheme,
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Name = "Authorization",
+            Description = "Cole aqui apenas o seu hash JWT gerado no login."
+        };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes.Add("Bearer", esquemaSeguranca);
+
+        var requisitoSeguranca = new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        };
+
+        document.SecurityRequirements = new List<OpenApiSecurityRequirement> { requisitoSeguranca };
+        return Task.CompletedTask;
+    });
+});
 
 // Configuração do DbContext
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<FcgUsersDbContext>(options => options.UseSqlServer(connectionString));
 
-// Configuração do RabbitMQ com MassTransit
-//builder.Services.AddMassTransit(x =>
-//{
-//    x.UsingRabbitMq((context, cfg) =>
-//    {
-//        cfg.Host("rabbitmq", "/", h =>
-//        {
-//            h.Username("fcgrabbtmq");
-//            h.Password("fcgrabbtmq");
-//        });
-
-//        cfg.ConfigureEndpoints(context);
-//    });
-//});
-
+// Configuração do MassTransit com RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
 
@@ -75,11 +128,10 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-#endregion
-
-
 // Query Services
 builder.Services.AddScoped<IUsuarioQueryService, UsuarioQueryService>();
+
+#endregion
 
 #region MEDIATR
 //Usuario
@@ -96,7 +148,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
@@ -107,9 +158,9 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-app.UseExceptionHandler();
-
 app.UseMiddleware<RequestLoggingMiddleware>();
+
+app.UseExceptionHandler();
 
 app.UseRouting();
 
@@ -120,7 +171,5 @@ app.UseAuthorization();
 app.UseHttpsRedirection();
 
 app.MapControllers();
-
-
 
 app.Run();

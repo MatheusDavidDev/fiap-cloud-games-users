@@ -4,9 +4,11 @@ using FCG.Users.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FCG.Users.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("usuarios")]
 public class UsuarioController : ControllerBase
@@ -20,26 +22,32 @@ public class UsuarioController : ControllerBase
         _queryService = queryService;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Criar(CriarUsuarioModel model)
+    [HttpGet("me")]
+    public async Task<IActionResult> BuscarPerfilAtual()
     {
-        await _mediator.Send(new CadastrarUsuarioCommand(model.Nome, model.Email, model.TipoUsuario, model.Senha));
-        return Ok();
+        var idUsuarioClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(idUsuarioClaim, out Guid id))
+            return Unauthorized("Token inválido.");
+
+        var result = await _queryService.ObterUsuarioPorIdAsync(id, CancellationToken.None);
+
+        return Ok(result);
     }
 
-    //[Authorize]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> UsuarioPorId(Guid id)
     {
+
         var result = await _queryService.ObterUsuarioPorIdAsync(id, CancellationToken.None);
-        return Ok();
+        return Ok(result);
     }
 
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> ObterUsuarios()
     {
         var result = await _queryService.ObterTodosUsuariosAsync(CancellationToken.None);
-        return Ok();
+        return Ok(result);
     }
 }

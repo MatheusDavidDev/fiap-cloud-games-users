@@ -1,5 +1,6 @@
 ﻿using FCG.Users.Application.Queries;
 using FCG.Users.Application.Queries.DTOs;
+using FCG.Users.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace FCG.Users.Infra.Queries;
@@ -25,7 +26,8 @@ public class UsuarioQueryService : IUsuarioQueryService
         {
             Id = usuario.Id,
             Nome = usuario.Nome,
-            Email = usuario.Email
+            Email = usuario.Email,
+            TipoUsuario = usuario.Tipo.ToString()
         };
     }
 
@@ -38,7 +40,8 @@ public class UsuarioQueryService : IUsuarioQueryService
             {
                 Id = x.Id,
                 Nome = x.Nome,
-                Email = x.Email
+                Email = x.Email,
+                TipoUsuario = x.Tipo.ToString()
             });
     }
 }
