@@ -1,0 +1,20 @@
+apiVersion: v1
+
+kind: ConfigMap
+
+
+metadata:
+
+  name: users-config
+
+
+data:
+
+
+  RabbitMQ__Host: "rabbitmq"
+
+
+  RabbitMQ__VirtualHost: "/"
+
+
+  ASPNETCORE_ENVIRONMENT: "Development"

@@ -113,7 +113,7 @@ builder.Services.AddMassTransit(x =>
             builder.Configuration["RabbitMQ:VirtualHost"],
             h =>
             {
-                h.Username(builder.Configuration["RabbitMQ:Username"!]);
+                h.Username(builder.Configuration["RabbitMQ:Username"]);
                 h.Password(builder.Configuration["RabbitMQ:Password"]);
             });
 
@@ -145,17 +145,22 @@ builder.Services.AddValidatorsFromAssembly(typeof(RefreshTokenValidator).Assembl
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+//// Configure the HTTP request pipeline.
+//if (app.Environment.IsDevelopment())
+//{
+//    app.MapOpenApi();
+//    app.MapScalarApiReference();
+//}
+app.MapOpenApi();
+app.MapScalarApiReference();
 
-using (var scope = app.Services.CreateScope())
+if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
 {
-    var db = scope.ServiceProvider.GetRequiredService<FcgUsersDbContext>();
-    db.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<FcgUsersDbContext>();
+        db.Database.Migrate();
+    }
 }
 
 app.UseMiddleware<RequestLoggingMiddleware>();
