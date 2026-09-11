@@ -35,6 +35,7 @@ public class TokenService : ITokenService
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
+            Issuer = "fcg-auth-api",
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(12),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

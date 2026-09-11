@@ -149,6 +149,7 @@ app.MapOpenApi("/users-scalar/openapi.json");
 app.MapScalarApiReference("/users-scalar", options =>
 {
     options.WithOpenApiRoutePattern("/users-scalar/openapi.json");
+    options.Title = "FCG Users API";
 });
 
 
