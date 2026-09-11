@@ -145,14 +145,13 @@ builder.Services.AddValidatorsFromAssembly(typeof(RefreshTokenValidator).Assembl
 
 var app = builder.Build();
 
-//// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.MapOpenApi();
-//    app.MapScalarApiReference();
-//}
-app.MapOpenApi();
-app.MapScalarApiReference();
+app.MapOpenApi("/users-scalar/openapi.json");
+app.MapScalarApiReference("/users-scalar", options =>
+{
+    options.WithOpenApiRoutePattern("/users-scalar/openapi.json");
+});
+
+
 
 if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
 {
