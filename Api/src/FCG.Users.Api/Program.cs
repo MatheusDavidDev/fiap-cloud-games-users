@@ -110,11 +110,17 @@ builder.Services.AddMassTransit(x =>
     {
         cfg.Host(
             builder.Configuration["RabbitMQ:Host"],
+            5671,
             builder.Configuration["RabbitMQ:VirtualHost"],
             h =>
             {
                 h.Username(builder.Configuration["RabbitMQ:Username"]);
                 h.Password(builder.Configuration["RabbitMQ:Password"]);
+
+                h.UseSsl(s =>
+                {
+                    s.Protocol = System.Security.Authentication.SslProtocols.Tls12;
+                });
             });
 
         cfg.ConfigureEndpoints(context);
