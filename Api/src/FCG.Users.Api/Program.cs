@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Text;
@@ -175,11 +176,16 @@ app.UseExceptionHandler();
 
 app.UseRouting();
 
+//
+app.UseHttpMetrics();
+
 app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+
+app.MapMetrics();
 
 app.MapControllers();
 

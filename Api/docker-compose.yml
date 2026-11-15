@@ -1,5 +1,3 @@
-version: "3.9"
-
 name: "fgc-users-docker"
 services:
   rabbitmq:
@@ -10,8 +8,8 @@ services:
       - "15672:15672"
 
     environment:
-      RABBITMQ_DEFAULT_USER: fcgrabbtmq
-      RABBITMQ_DEFAULT_PASS: fcgrabbtmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
 
     networks:
       - fcg-network
@@ -31,7 +29,7 @@ services:
           memory: 1000M
           
     environment:
-      SA_PASSWORD: "Sql@123456789"
+      SA_PASSWORD: ${SQL_SA_PASSWORD}
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
 
@@ -65,17 +63,20 @@ services:
           memory: 256M 
 
     environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_HTTP_PORTS: "8080"
+
       #ConnectionStrings
-      ConnectionStrings__DefaultConnection: "Server=users-db;Database=Usuarios;User Id=sa;Password=Sql@123456789;TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Server=users-db;Database=Usuarios;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True"
 
       #JWT
-      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
+      Jwt__Key: "${JWT_KEY}"
 
       # RabbitMQ
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__VirtualHost: "/"
-      RabbitMQ__Username: "fcgrabbtmq"
-      RabbitMQ__Password: "fcgrabbtmq"
+      RabbitMQ__Username: "${RABBITMQ_USER}"
+      RabbitMQ__Password: "${RABBITMQ_PASSWORD}"
 
     networks:
       - fcg-network
