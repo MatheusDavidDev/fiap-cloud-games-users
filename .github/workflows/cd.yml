@@ -46,6 +46,8 @@ jobs:
           IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         run: |
           docker build \
+            --provenance=false \
+            --sbom=false \
             -f Api/Dockerfile \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
             ./Api
