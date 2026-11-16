@@ -106,23 +106,35 @@ builder.Services.AddDbContext<FcgUsersDbContext>(options => options.UseSqlServer
 // Configuração do MassTransit com RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
-
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(
-            builder.Configuration["RabbitMQ:Host"],
-            5671,
-            builder.Configuration["RabbitMQ:VirtualHost"],
-            h =>
-            {
-                h.Username(builder.Configuration["RabbitMQ:Username"]);
-                h.Password(builder.Configuration["RabbitMQ:Password"]);
+        var rabbitHost = builder.Configuration["RabbitMQ:Host"];
+        var rabbitVirtualHost = builder.Configuration["RabbitMQ:VirtualHost"] ?? "/";
 
+        var rabbitPort = builder.Configuration.GetValue<int?>("RabbitMQ:Port") ?? 5672;
+        var rabbitUseSsl = builder.Configuration.GetValue<bool>("RabbitMQ:UseSsl");
+
+        var rabbitScheme = rabbitUseSsl ? "rabbitmqs" : "rabbitmq";
+
+        var rabbitUri = new UriBuilder(
+            rabbitScheme,
+            rabbitHost,
+            rabbitPort
+        ).Uri;
+
+        cfg.Host(rabbitUri, rabbitVirtualHost, h =>
+        {
+            h.Username(builder.Configuration["RabbitMQ:Username"]);
+            h.Password(builder.Configuration["RabbitMQ:Password"]);
+
+            if (rabbitUseSsl)
+            {
                 h.UseSsl(s =>
                 {
                     s.Protocol = System.Security.Authentication.SslProtocols.Tls12;
                 });
-            });
+            }
+        });
 
         cfg.ConfigureEndpoints(context);
     });
