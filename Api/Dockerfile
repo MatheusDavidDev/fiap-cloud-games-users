@@ -8,6 +8,7 @@ RUN dotnet restore FCG.Users.sln
 
 RUN dotnet publish src/FCG.Users.Api/FCG.Users.Api.csproj \
     -c Release \
+    --no-restore \
     -o /app/publish
 
 
