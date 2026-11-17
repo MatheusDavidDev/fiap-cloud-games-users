@@ -33,3 +33,6 @@ jobs:
 
       - name: Compilar projeto
         run: dotnet build FCG.Users.sln --no-restore --configuration Release
+      
+      - name: Executar testes unitarios
+        run: dotnet test FCG.Users.sln --no-build --configuration Release --verbosity minimal
