@@ -114,7 +114,7 @@ builder.Services.AddMassTransit(x =>
         var rabbitPort = builder.Configuration.GetValue<int?>("RabbitMQ:Port") ?? 5672;
         var rabbitUseSsl = builder.Configuration.GetValue<bool>("RabbitMQ:UseSsl");
 
-        var rabbitScheme = rabbitUseSsl ? "rabbitmqs" : "rabbitmq";
+        var rabbitScheme = rabbitUseSsl ? "amqps" : "amqp";
 
         var rabbitUri = new UriBuilder(
             rabbitScheme,
